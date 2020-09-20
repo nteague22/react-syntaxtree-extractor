@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "outDir": "dist",
+        "sourceMap": true,
+        "importHelpers": true,
+        "diagnostics": false,
+        "incremental": true,
+        "lib": ["ESNext"],
+        "jsx": "preserve",
+        "module": "ES6",
+        "moduleResolution": "Node",
+        "downlevelIteration": true
+    },
+    "include": ["src"],
+    "typeAcquisition": {
+        "include": ["tslib"]
+    },
+    "ts-node": {
+        "transpileOnly": true
+    }
+
+}
