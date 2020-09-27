@@ -60,7 +60,7 @@ export function buildAst(content: string, codeType: JsCodeType) {
     return parse(content, { sourceType: codeType });
 }
 
-const extractComponentBounds = (path: NodePath<JSXElement>): ComponentBounds => {
+export const extractComponentBounds = (path: NodePath<JSXElement>): ComponentBounds => {
     const rootComponent = path.findParent(p => p.isFunctionDeclaration() || p.isArrowFunctionExpression() || p.isClassDeclaration());
     if (rootComponent) {
         const parentNode = rootComponent.node;
@@ -114,7 +114,7 @@ const extractComponentBounds = (path: NodePath<JSXElement>): ComponentBounds => 
     }
 }
 
-const getParams = (container: ContainerNode) => {
+export const getParams = (container: ContainerNode) => {
     let hasChildren = false;
     let parameterSet: Record<string, IModelProperty> = {};
     let nodeParams: FunctionParams = [];
@@ -167,7 +167,7 @@ export class ValueProperty implements IModelProperty {
 
 }
 
-function getCurrentComponent(reference: Node, found: Map<string, ComponentBounds>) {
+export function getCurrentComponent(reference: Node, found: Map<string, ComponentBounds>) {
     for (let [key, value] of found) {
         if (value.loc.start <= reference.start && value.loc.end >= reference.end) {
             return value;
