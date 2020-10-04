@@ -2,11 +2,11 @@
  * Decisions on how to handle bound data for AOT rendering
  */
 export interface IModelExtractRules {
-    declarationTemplate: string;
-    languageTypeMapping: Record<string, string>;
-    rootNameTransformation: RegExp;
-    propertyNameTransformation: RegExp;
-    allowInlineExpressions: boolean;
+    declarationTemplate?: string;
+    languageTypeMapping?: Record<string, string>;
+    rootNameTransformation?: (name: string) => string;
+    propertyNameTransformation?: (name: string) => string;
+    allowInlineExpressions?: boolean;
 }
 
 /*

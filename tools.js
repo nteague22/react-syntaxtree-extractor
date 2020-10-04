@@ -2,6 +2,8 @@ const yargs = require("yargs");
 const { parse } = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const { promises } = require("fs");
+const { walkTree } = require("./src/SyntaxTreeBuilder");
+const { buildAst } = require("./src/index").default;
 
 yargs
     .command("ancestry", "Shows ancestry of react elements in a file", {
@@ -32,9 +34,36 @@ yargs
                 }
             });
         }).catch(console.error))
-    .command("components", "Get the component targets for extraction",
-        {},
-        (async (argv) => {
+    .command("build", "build a component file and model file",
+        {
+            target: {
+                alias: 'src',
+                type: 'string',
+                description: "The target file to read the JSX components from",
+                demandOption: true
+            },
+            outPath: {
+                alias: 'o',
+                type: 'string',
+                default: './',
+                description: "The output path to create the template and model file"
+            }
+        },
+        async (argv) => {
+            const input = await promises.readFile(argv.target, { encoding: "utf8" });
+            const ast = buildAst(input, "unambiguous");
+            const results = walkTree(ast, {
+                allowInlineExpressions: true,
+                rootNameTransformation: (name) => name,
+                propertyNameTransformation: (name) => name
+            }, {
+                useNestedComponents: true,
+                nestedComponentTemplate: '@{Html.RenderPartial("[template]", [model]);}'
+            }, argv.outPath);
 
-        }).catch(console.error))
+            Object.keys(results.components).forEach(tgt => {
+                // get the component files
+                // build the model files
+            });
+        })
         .showHelpOnFail(true);

@@ -25,12 +25,15 @@ import {
     JSXIdentifier
 } from "@babel/types";
 import traverse, { NodePath, VisitNodeFunction } from "@babel/traverse";
+import path from 'path';
 import { IModelExtractRules } from './IModelExtractRules';
 import { ITemplateExtractRules } from './ITemplateExtractRules';
 import { IComponent } from './IComponent';
-import { FunctionalComponent } from './FunctionalComponent';
+import { FunctionalComponent, FunctionalModel } from './FunctionalComponent';
 import { ClassComponent } from './ClassComponent';
 import { isFunctionDeclaration, JsxOpeningElement } from 'typescript';
+import { string } from 'yargs';
+import { IModel } from './IModel';
 
 export type JsCodeType = "script" | "module" | "unambiguous";
 export type ContainerNode = FunctionDeclaration | ArrowFunctionExpression | ClassDeclaration;
@@ -176,7 +179,7 @@ export function getCurrentComponent(reference: Node, found: Map<string, Componen
     return null;
 }
 
-export function walkTree(ast: File, modelRules: IModelExtractRules, templateRules: ITemplateExtractRules) {
+export function walkTree(ast: File, modelRules: IModelExtractRules, templateRules: ITemplateExtractRules, outPath: string) {
     let currentComponent: ComponentBounds = null;
     let componentsFound = new Map<string, ComponentBounds>();
     traverse(ast, {
@@ -223,6 +226,33 @@ export function walkTree(ast: File, modelRules: IModelExtractRules, templateRule
             }
         }
     });
+
+    let models: Record<string, IModel> = {};
+    let components: Record<string, ComponentBounds> = {};
+    let templates: Record<string, string> = {};
+    for (let [key, value] of componentsFound) {
+        components[key] = value;
+        let targetName = modelRules.rootNameTransformation(key);
+        templates[key] = path.resolve(outPath, targetName + templateRules.fileExtension);
+        let model = new FunctionalModel(value.name);
+        Object.keys(value.params).forEach(pr => {
+            let newName = modelRules.propertyNameTransformation(value.params[pr].name);
+            let newType = modelRules.languageTypeMapping[value.params[pr].type];
+            modelRules.declarationTemplate.replace('[name]', newName).replace('[type]', newType)
+            model.properties[newName] = {
+                name: newName,
+                type: newType,
+                isComplexType: /string|int|datetime|decimal|bool/.test(newType) === false,
+                isArray: value.params[pr].type.endsWith("[]")
+            }
+        });
+    }
+
+    return {
+        components,
+        models,
+        templates
+    };
 }
 
 // TemplateElement are for interpolated strings, they contain:
